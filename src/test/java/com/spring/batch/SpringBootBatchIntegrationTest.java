@@ -1,4 +1,4 @@
-package com.example.helloworld;
+package com.spring.batch;
 
 import org.junit.After;
 import org.junit.Test;

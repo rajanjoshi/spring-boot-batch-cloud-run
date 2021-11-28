@@ -1,5 +1,5 @@
 {
-    "name": "helloworld",
+    "name": "springbatch",
     "build": {
         "buildpacks": {
             "builder": "gcr.io/buildpacks/builder:v1"

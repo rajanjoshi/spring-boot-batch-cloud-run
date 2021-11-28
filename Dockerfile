@@ -1,5 +1,5 @@
 FROM adoptopenjdk:8-jre-hotspot
 
-COPY target/helloworld.jar /helloworld.jar
+COPY target/springbatch.jar /springbatch.jar
 
-ENTRYPOINT java -jar helloworld.jar
+ENTRYPOINT java -jar springbatch.jar

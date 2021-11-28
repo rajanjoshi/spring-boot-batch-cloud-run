@@ -1,4 +1,4 @@
-package com.example.helloworld;
+package com.spring.batch;
 
 public class Coffee {
 

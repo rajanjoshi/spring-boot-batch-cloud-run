@@ -1,4 +1,4 @@
-package com.example.helloworld;
+package com.spring.batch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

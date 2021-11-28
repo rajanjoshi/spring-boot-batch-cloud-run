@@ -82,7 +82,7 @@
 	</dependencyManagement>
 
 	<build>
-		<finalName>helloworld</finalName>
+		<finalName>springbatch</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
