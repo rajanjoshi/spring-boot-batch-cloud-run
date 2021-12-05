@@ -1,6 +1,7 @@
 package com.spring.batch;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.batch.core.ExitStatus;
@@ -14,9 +15,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 @SpringBatchTest
 @SpringBootTest
@@ -42,8 +40,8 @@ public class SpringBootBatchIntegrationTest {
         JobInstance jobInstance = jobExecution.getJobInstance();
         ExitStatus jobExitStatus = jobExecution.getExitStatus();
 
-        assertThat(jobInstance.getJobName(), is("importUserJob"));
-        assertThat(jobExitStatus.getExitCode(), is("COMPLETED"));
+        Assert.assertEquals(jobInstance.getJobName(), "importUserJob");
+        Assert.assertEquals(jobExitStatus.getExitCode(), "COMPLETED");
     }
 
 }
