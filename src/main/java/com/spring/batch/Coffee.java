@@ -1,7 +1,17 @@
 package com.spring.batch;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 
+@Entity
 public class Coffee {
 
+    @Id
+    @SequenceGenerator(name = "seqGenerator", sequenceName = "COFFEE_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seqGenerator")
+    private Long id;
     private String brand;
     private String origin;
     private String characteristics;
