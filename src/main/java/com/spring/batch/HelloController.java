@@ -65,7 +65,7 @@ public class HelloController {
     @Value("classpath:sample.xml")
     private Resource sampleXml;
 
-    @Value("gs://spring-bucket-coffee/service-account.json")
+    @Value("classpath:service-account.json")
     private Resource credentials;
 
     @GetMapping("/")
