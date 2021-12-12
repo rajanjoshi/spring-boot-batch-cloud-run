@@ -6,27 +6,30 @@ steps:
 - name: 'gcr.io/cloud-builders/gcloud'
   args: ['run', 'services','update-traffic','terrraform-spring-batch','--to-latest','--region', 'us-central1']  
 
-- id: terraform-init
-  name: hashicorp/terraform:0.14.8
-  args:
-    - 'init'
-    - '-no-color'
-    - '-input=false'
-    - './'
+options:
+  logging: CLOUD_LOGGING_ONLY 
+  
+# - id: terraform-init
+#   name: hashicorp/terraform:0.14.8
+#   args:
+#     - 'init'
+#     - '-no-color'
+#     - '-input=false'
+#     - './'
 
-- id: terraform-plan
-  name: hashicorp/terraform:0.14.8
-  args:
-    - 'plan'
-    - '-no-color'
-    - '-input=false'
-    - './'
+# - id: terraform-plan
+#   name: hashicorp/terraform:0.14.8
+#   args:
+#     - 'plan'
+#     - '-no-color'
+#     - '-input=false'
+#     - './'
 
-- id: terraform-apply
-  name: hashicorp/terraform:0.14.8
-  args:
-    - 'apply'
-    - '-auto-approve'
-    - '-no-color'
-    - '-input=false'
-    - './'   
+# - id: terraform-apply
+#   name: hashicorp/terraform:0.14.8
+#   args:
+#     - 'apply'
+#     - '-auto-approve'
+#     - '-no-color'
+#     - '-input=false'
+#     - './'   
