@@ -9,27 +9,3 @@ steps:
 options:
   logging: CLOUD_LOGGING_ONLY 
   
-# - id: terraform-init
-#   name: hashicorp/terraform:0.14.8
-#   args:
-#     - 'init'
-#     - '-no-color'
-#     - '-input=false'
-#     - './'
-
-# - id: terraform-plan
-#   name: hashicorp/terraform:0.14.8
-#   args:
-#     - 'plan'
-#     - '-no-color'
-#     - '-input=false'
-#     - './'
-
-# - id: terraform-apply
-#   name: hashicorp/terraform:0.14.8
-#   args:
-#     - 'apply'
-#     - '-auto-approve'
-#     - '-no-color'
-#     - '-input=false'
-#     - './'   
