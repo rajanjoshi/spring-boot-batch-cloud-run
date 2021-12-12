@@ -1,8 +1,8 @@
 steps:
 - name: gcr.io/cloud-builders/mvn:3.5.0-jdk-8
-  args: ['clean', 'install', 'jib:build', '-Dimage=gcr.io/powerful-vine-329211/spring-batch-postgres-gcs-bq10']
+  args: ['clean', 'install', 'jib:build', '-Dimage=gcr.io/powerful-vine-329211/spring-batch-postgres-gcs-bq11']
 - name: 'gcr.io/cloud-builders/gcloud'
-  args: ['run', 'deploy', 'terrraform-spring-batch', '--image', 'gcr.io/powerful-vine-329211/spring-batch-postgres-gcs-bq10', '--region', 'us-central1','--allow-unauthenticated','--platform','managed']
+  args: ['run', 'deploy', 'terrraform-spring-batch', '--image', 'gcr.io/powerful-vine-329211/spring-batch-postgres-gcs-bq11', '--region', 'us-central1','--allow-unauthenticated','--platform','managed']
 - name: 'gcr.io/cloud-builders/gcloud'
   args: ['run', 'services','update-traffic','terrraform-spring-batch','--to-latest','--region', 'us-central1']  
 
