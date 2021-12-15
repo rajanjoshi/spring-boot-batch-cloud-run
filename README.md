@@ -1,4 +1,4 @@
-This is a regular Spring Boot application using Tomcat server.
+This is a Spring Boot application using Tomcat server.
 
 ## Build
 ```
