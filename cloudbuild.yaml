@@ -1,6 +1,6 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/powerful-vine-329211/spring-batch-postgres-gcs-bq11', 'spring-boot-batch-cloud-run']
+  args: ['build', '-t', 'gcr.io/powerful-vine-329211/spring-batch-postgres-gcs-bq11', './']
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/powerful-vine-329211/spring-batch-postgres-gcs-bq11']
 # - name: gcr.io/cloud-builders/mvn:3.5.0-jdk-8
