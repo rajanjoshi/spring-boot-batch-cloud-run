@@ -1,7 +1,7 @@
 package com.spring.batch;
 
 import java.io.IOException;
-
+import java.io.FileInputStream;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -20,6 +20,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
+import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.Storage.BlobTargetOption;
+import com.google.cloud.storage.Storage.PredefinedAcl;
+import com.google.cloud.storage.StorageOptions;
+import com.google.cloud.storage.*;
+import java.net.URI;
+import com.google.api.gax.paging.Page;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.batch.item.ItemStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Configuration
 @EnableBatchProcessing
@@ -41,9 +54,21 @@ public class BatchConfiguration {
     private Resource gcsFile;
 
     @Bean
-    public FlatFileItemReader<Coffee> reader() throws IOException{
+    public FlatFileItemReader<Coffee> reader() throws Exception{
+        byte[] fileContents = null;
+        try {	
+            Bucket bucket = getStorage().get("spring-bucket-coffee");
+            Page<Blob> blobs = bucket.list();
+            for (Blob blob: blobs.getValues()) {
+                fileContents = blob.getContent();
+            }
+        }catch(IllegalStateException e){
+			throw new RuntimeException(e);
+		}
+        Path tempFile = Files.createTempFile("tempfiles", ".csv");
+        Files.write(tempFile,fileContents);
         return new FlatFileItemReaderBuilder<Coffee>().name("coffeeItemReader")
-            .resource(new PathResource(gcsFile.getURI()))
+            .resource(new PathResource(tempFile.toUri()))
             .delimited()
             .names(new String[] { "brand", "origin", "characteristics" })
             .fieldSetMapper(new BeanWrapperFieldSetMapper<Coffee>() {{
@@ -76,7 +101,7 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public Step step1() throws IOException{
+    public Step step1() throws Exception{
         return stepBuilderFactory.get("step1")
             .<Coffee, Coffee> chunk(2000)
             .reader(reader())
@@ -84,5 +109,12 @@ public class BatchConfiguration {
             .writer(writer())
             .build();
     }
+
+    private Storage getStorage() throws Exception{
+        return StorageOptions.newBuilder().
+                   setCredentials(ServiceAccountCredentials.fromStream(
+                    getClass().getResourceAsStream("/service-account.json"))).build()
+                   .getService();
+       }
 
 }
