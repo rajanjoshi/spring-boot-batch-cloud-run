@@ -65,9 +65,6 @@ public class HelloController {
     @Value("classpath:sample.xml")
     private Resource sampleXml;
 
-    @Value("classpath:service-account.json")
-    private Resource credentials;
-
     @GetMapping("/")
     String hello() throws IOException{
         return "Hello World";
@@ -82,7 +79,7 @@ public class HelloController {
             // once, and can be reused for multiple requests.
             BigQuery bigquery =  BigQueryOptions.newBuilder()
                 .setCredentials(ServiceAccountCredentials.fromStream(
-                    new FileInputStream(credentials.getFile())))
+                    getClass().getResourceAsStream("/service-account.json")))
                 .setProjectId("powerful-vine-329211")
                 .build()
                 .getService();
@@ -117,7 +114,7 @@ public class HelloController {
 
             BigQuery bigquery =  BigQueryOptions.newBuilder()
                 .setCredentials(ServiceAccountCredentials.fromStream(
-                    new FileInputStream(credentials.getFile())))
+                    getClass().getResourceAsStream("/service-account.json")))
                 .setProjectId("powerful-vine-329211")
                 .build()
                 .getService();
@@ -192,7 +189,7 @@ public class HelloController {
     private Storage getStorage() throws Exception{
         return StorageOptions.newBuilder().
                    setCredentials(ServiceAccountCredentials.fromStream(
-                   new FileInputStream(credentials.getFile()))).build()
+                    getClass().getResourceAsStream("/service-account.json"))).build()
                    .getService();
        }
 
