@@ -46,6 +46,7 @@ import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.TableId;
 import java.util.stream.StreamSupport;
+import org.springframework.core.env.Environment;
 
 @RestController
 public class HelloController {
@@ -54,33 +55,43 @@ public class HelloController {
     private JobLauncher jobLauncher;
 
     @Autowired
+    private Environment environment;
+
+    @Autowired
     private Job job;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    @Value("gs://spring-bucket-coffee/coffee-list.CSV")
+    @Value("gs://spring-bucket-coffee-dev/coffee-list.CSV")
     private Resource gcsFile;
 
-    @Value("classpath:sample.xml")
+    @Value("powerful-vine-329211}")
+    private String projectId;
+
+    @Value("classpath:templates/sample.xml")
     private Resource sampleXml;
+
+    @Value("${secrets.dev-pass}")
+    private String databasePassword;
 
     @GetMapping("/")
     String hello() throws IOException{
-        return "Hello World";
+        return databasePassword;
     }
 
     @GetMapping("/readFromBQ")
     String simpleBigQuery() throws IOException{
         String query = "SELECT corpus FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
         List<String> resultList = new ArrayList();
+        String env = environment.getActiveProfiles()[0];
         try {
             // Initialize client that will be used to send requests. This client only needs to be created
             // once, and can be reused for multiple requests.
             BigQuery bigquery =  BigQueryOptions.newBuilder()
                 .setCredentials(ServiceAccountCredentials.fromStream(
-                    getClass().getResourceAsStream("/service-account.json")))
-                .setProjectId("powerful-vine-329211")
+                    getClass().getResourceAsStream("/service-account-"+env+".json")))
+                .setProjectId(projectId)
                 .build()
                 .getService();
       
@@ -105,17 +116,17 @@ public class HelloController {
         String result=null;
         String datasetName = "marketplace";
         String tableName = "TechCrunch";
-        String sourceUri = "gs://spring-bucket-coffee/coffee-list.CSV";
+        String env = environment.getActiveProfiles()[0];
+        String sourceUri = "gs://spring-bucket-coffee-"+env+"/coffee-list.CSV";
         Schema schema = Schema.of(
                         Field.of("column1", StandardSQLTypeName.STRING),
                         Field.of("column2", StandardSQLTypeName.STRING),
                         Field.of("column3", StandardSQLTypeName.STRING));
         try {
-
             BigQuery bigquery =  BigQueryOptions.newBuilder()
                 .setCredentials(ServiceAccountCredentials.fromStream(
-                    getClass().getResourceAsStream("/service-account.json")))
-                .setProjectId("powerful-vine-329211")
+                    getClass().getResourceAsStream("/service-account-"+env+".json")))
+                .setProjectId(projectId)
                 .build()
                 .getService();
         
@@ -174,9 +185,10 @@ public class HelloController {
     public String writeFile() throws Exception{
         File file = new File(sampleXml.getURI());
         String hourMinute = String.valueOf(System.currentTimeMillis());
+        String env = environment.getActiveProfiles()[0];
         try {			
-			    BlobInfo blobInfo = getStorage().create(
-				BlobInfo.newBuilder("spring-bucket-coffee", hourMinute+"_"+file.getName()).build(), 
+			    BlobInfo blobInfo = getStorage(env).create(
+				BlobInfo.newBuilder("spring-bucket-coffee-"+env+"", hourMinute+"_"+file.getName()).build(), 
 				Files.readAllBytes(file.toPath()), 
 				BlobTargetOption.predefinedAcl(PredefinedAcl.PUBLIC_READ) 
 			);
@@ -186,10 +198,10 @@ public class HelloController {
 		}
     }
 
-    private Storage getStorage() throws Exception{
+    private Storage getStorage(String env) throws Exception{
         return StorageOptions.newBuilder().
                    setCredentials(ServiceAccountCredentials.fromStream(
-                    getClass().getResourceAsStream("/service-account.json"))).build()
+                    getClass().getResourceAsStream("/service-account-"+env+".json"))).build()
                    .getService();
        }
 
