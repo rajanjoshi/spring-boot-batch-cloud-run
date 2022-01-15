@@ -33,6 +33,8 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.batch.item.ItemStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.springframework.core.env.Environment;
+// import parent.spring.batch.StorageUtils;
 
 @Configuration
 @EnableBatchProcessing
@@ -46,18 +48,19 @@ public class BatchConfiguration {
 
     @Autowired
     public CoffeeRepository repository;
-    
-    @Value("${file.input}")
-    private String fileInput;
 
-    @Value("gs://spring-bucket-coffee/coffee-list.CSV")
-    private Resource gcsFile;
+    @Autowired
+    private Environment environment;
+
+    // @Autowired
+    // private StorageUtils storageUtils;
 
     @Bean
     public FlatFileItemReader<Coffee> reader() throws Exception{
         byte[] fileContents = null;
+        String env = environment.getActiveProfiles()[0];
         try {	
-            Bucket bucket = getStorage().get("spring-bucket-coffee");
+            Bucket bucket = getStorage(env).get("spring-bucket-coffee-"+env+"");
             Page<Blob> blobs = bucket.list();
             for (Blob blob: blobs.getValues()) {
                 fileContents = blob.getContent();
@@ -110,10 +113,10 @@ public class BatchConfiguration {
             .build();
     }
 
-    private Storage getStorage() throws Exception{
+    private Storage getStorage(String env) throws Exception{
         return StorageOptions.newBuilder().
                    setCredentials(ServiceAccountCredentials.fromStream(
-                    getClass().getResourceAsStream("/service-account.json"))).build()
+                    getClass().getResourceAsStream("/service-account-"+env+".json"))).build()
                    .getService();
        }
 
