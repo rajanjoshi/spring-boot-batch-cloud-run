@@ -1,14 +1,15 @@
 steps:
-# - name: 'gcr.io/cloud-builders/docker'
-#   args: ['build', '-t', 'gcr.io/powerful-vine-329211/spring-batch-postgres-gcs-bq11', './']
-# - name: 'gcr.io/cloud-builders/docker'
-#   args: ['push', 'gcr.io/powerful-vine-329211/spring-batch-postgres-gcs-bq11']
-- name: gcr.io/cloud-builders/mvn:3.5.0-jdk-8
-  args: ['clean', 'install', 'jib:build', '-Dimage=gcr.io/powerful-vine-329211/spring-batch-postgres-gcs-bq11']
+# - name: gcr.io/cloud-builders/mvn:3.5.0-jdk-8
+#   args: ['clean', 'install', 'jib:build', '-Dimage=gcr.io/powerful-vine-329211/spring-batch-postgres-gcs-bq11']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/${PROJECT_ID}/spring-batch-postgres-gcs-bq11','--build-arg=PROJECT_ID=${PROJECT_ID}', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/${PROJECT_ID}/spring-batch-postgres-gcs-bq11']
 - name: 'gcr.io/cloud-builders/gcloud'
-  args: ['run', 'deploy', 'terrraform-spring-batch', '--image', 'gcr.io/powerful-vine-329211/spring-batch-postgres-gcs-bq11', '--region', 'us-central1','--allow-unauthenticated','--platform','managed']
+  args: ['run', 'deploy', 'springbatch-${_ENV}', '--image', 'gcr.io/${PROJECT_ID}/spring-batch-postgres-gcs-bq11', '--region', 'us-central1','--allow-unauthenticated','--platform','managed','--set-env-vars','SPRING_PROFILES_ACTIVE=${_ENV}']
 - name: 'gcr.io/cloud-builders/gcloud'
-  args: ['run', 'services','update-traffic','terrraform-spring-batch','--to-latest','--region', 'us-central1']  
+  args: ['run', 'services','update-traffic','springbatch-${_ENV}','--to-latest','--region', 'us-central1']  
+ 
 
 options:
   logging: CLOUD_LOGGING_ONLY 
