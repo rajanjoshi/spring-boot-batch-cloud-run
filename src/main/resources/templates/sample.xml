@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SecurityPositions>
+    <SecurityPosition>
+        <TransCode>INIT</TransCode><Entity>XXX</Entity><SubEntity>003</SubEntity><SecurityAccount>3702        </SecurityAccount><wkn>DB2D51</wkn><Quantity>900</Quantity><ClosingDate>2021-01-29</ClosingDate>
+    </SecurityPosition>
+    <SecurityPosition>
+        <TransCode>INIT</TransCode><Entity>GMF</Entity><SubEntity>003</SubEntity><SecurityAccount>3702        </SecurityAccount><wkn>DB2D52</wkn><Quantity>900</Quantity><ClosingDate>2021-01-29</ClosingDate>
+    </SecurityPosition>
+    <SecurityPosition>
+        <TransCode>INIT</TransCode><Entity>DBK</Entity><SubEntity>003</SubEntity><SecurityAccount>3702        </SecurityAccount><wkn>DB2D5V</wkn><Quantity>900</Quantity><ClosingDate>2021-01-29</ClosingDate>
+    </SecurityPosition>
+    <SecurityPosition>
+    <TransCode>INIT</TransCode><Entity>DBK</Entity><SubEntity>003</SubEntity><SecurityAccount>6660        </SecurityAccount><wkn>DB2D5A</wkn><Quantity>228</Quantity><ClosingDate>2021-01-29</ClosingDate>
+    </SecurityPosition>
+</SecurityPositions>
