@@ -1,9 +1,5 @@
 This is a Spring Boot application using Tomcat server.
 
-POC:
-ReadCSV and writeDB
-ReadBigquery and writeDB
-
 ## Build
 ```
 mvn package
