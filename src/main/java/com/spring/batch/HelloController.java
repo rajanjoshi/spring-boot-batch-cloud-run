@@ -5,6 +5,7 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,16 +29,12 @@ import com.google.cloud.storage.Storage.PredefinedAcl;
 import com.google.cloud.storage.StorageOptions;
 import java.nio.file.Files;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQueryException;
-import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.CsvOptions;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.JobInfo;
@@ -58,21 +55,26 @@ public class HelloController {
     private Environment environment;
 
     @Autowired
-    private Job job;
+    @Qualifier("importUserJob")
+    private Job importUserJob;
+
+    @Autowired
+    @Qualifier("bigQueryReadJob")
+    private Job bigQueryReadJob;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    @Value("gs://spring-bucket-coffee-dev/coffee-list.CSV")
+    @Value("${gcsFile}")
     private Resource gcsFile;
 
-    @Value("powerful-vine-329211}")
+    @Value("${projectId}")
     private String projectId;
 
     @Value("classpath:templates/sample.xml")
     private Resource sampleXml;
 
-    @Value("${secrets.dev-pass}")
+    @Value("${spring.datasource.password}")
     private String databasePassword;
 
     @GetMapping("/")
@@ -80,10 +82,14 @@ public class HelloController {
         return databasePassword;
     }
 
-    @GetMapping("/readFromBQ")
+    @GetMapping("/readFromBQJoin")
     String simpleBigQuery() throws IOException{
-        String query = "SELECT corpus FROM `bigquery-public-data.samples.shakespeare` GROUP BY corpus;";
-        List<String> resultList = new ArrayList();
+        String query = "SELECT orders.product_names,orders.product_prices " +
+        " FROM `southern-branch-338317.customer_dataset.customer` as cust " +
+        " JOIN `prod-project-338417.order_dataset.order_product_details` as orders " +
+        " ON cust.customer_id = orders.customer_id";
+
+        List<String> resultList = new ArrayList<>();
         String env = environment.getActiveProfiles()[0];
         try {
             // Initialize client that will be used to send requests. This client only needs to be created
@@ -101,8 +107,9 @@ public class HelloController {
             // Execute the query.
             TableResult result = bigquery.query(queryConfig);
             resultList = StreamSupport.stream(result.getValues().spliterator(), false)
-			.map(valueList -> valueList.get(0).getStringValue())
-			.collect(Collectors.toList());
+                        .flatMap(valueList -> valueList.stream())
+                        .map(fv -> fv.getValue().toString())
+                        .collect(Collectors.toList());
 
             System.out.println("Query ran successfully");
           } catch (BigQueryException | InterruptedException e) {
@@ -117,7 +124,7 @@ public class HelloController {
         String datasetName = "marketplace";
         String tableName = "TechCrunch";
         String env = environment.getActiveProfiles()[0];
-        String sourceUri = "gs://spring-bucket-coffee-"+env+"/coffee-list.CSV";
+        String sourceUri = "gs://"+env+"-upstream-bucket/coffee-list.CSV";
         Schema schema = Schema.of(
                         Field.of("column1", StandardSQLTypeName.STRING),
                         Field.of("column2", StandardSQLTypeName.STRING),
@@ -169,12 +176,22 @@ public class HelloController {
         );
     }
 
-    @RequestMapping("/triggerJob")
-    public List<String> triggerJob() throws Exception{
-       JobParameters jobParameters =
-                       new JobParametersBuilder()
+    @RequestMapping("/triggerGcstoDbJob")
+    public List<String> triggerGcstoDbJob() throws Exception{
+       JobParameters jobParameters = new JobParametersBuilder()
                        .addLong("time",System.currentTimeMillis()).toJobParameters();
-        jobLauncher.run(job, jobParameters);
+        jobLauncher.run(importUserJob, jobParameters);
+
+        return this.jdbcTemplate.queryForList("SELECT * FROM coffee").stream()
+				.map((m) -> m.values().toString())
+				.collect(Collectors.toList());
+    }
+
+    @RequestMapping("/triggerBQToDbJob")
+    public List<String> triggerBQToDbJob() throws Exception{
+       JobParameters jobParameters = new JobParametersBuilder()
+                       .addLong("time",System.currentTimeMillis()).toJobParameters();
+        jobLauncher.run(bigQueryReadJob, jobParameters);
 
         return this.jdbcTemplate.queryForList("SELECT * FROM coffee").stream()
 				.map((m) -> m.values().toString())
@@ -188,7 +205,7 @@ public class HelloController {
         String env = environment.getActiveProfiles()[0];
         try {			
 			    BlobInfo blobInfo = getStorage(env).create(
-				BlobInfo.newBuilder("spring-bucket-coffee-"+env+"", hourMinute+"_"+file.getName()).build(), 
+				BlobInfo.newBuilder(env+"-upstream-bucket", hourMinute+"_"+file.getName()).build(), 
 				Files.readAllBytes(file.toPath()), 
 				BlobTargetOption.predefinedAcl(PredefinedAcl.PUBLIC_READ) 
 			);
