@@ -1,7 +1,7 @@
 package com.spring.batch;
+import com.spring.batch.model.*;
+import com.spring.batch.reader.CustomItemReader;
 
-import java.io.IOException;
-import java.io.FileInputStream;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -15,24 +15,20 @@ import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.PathResource;
-import org.springframework.core.io.Resource;
 import com.google.auth.oauth2.ServiceAccountCredentials;
-import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.Storage.BlobTargetOption;
-import com.google.cloud.storage.Storage.PredefinedAcl;
 import com.google.cloud.storage.StorageOptions;
+
 import com.google.cloud.storage.*;
-import java.net.URI;
 import com.google.api.gax.paging.Page;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.batch.item.ItemStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 import org.springframework.core.env.Environment;
 // import parent.spring.batch.StorageUtils;
 
@@ -52,15 +48,15 @@ public class BatchConfiguration {
     @Autowired
     private Environment environment;
 
-    // @Autowired
-    // private StorageUtils storageUtils;
+    @Value("${projectId}")
+    private String projectId;
 
     @Bean
     public FlatFileItemReader<Coffee> reader() throws Exception{
         byte[] fileContents = null;
         String env = environment.getActiveProfiles()[0];
         try {	
-            Bucket bucket = getStorage(env).get("spring-bucket-coffee-"+env+"");
+            Bucket bucket = getStorage(env).get(env+"-upstream-bucket");
             Page<Blob> blobs = bucket.list();
             for (Blob blob: blobs.getValues()) {
                 fileContents = blob.getContent();
@@ -81,8 +77,19 @@ public class BatchConfiguration {
     }
 
     @Bean
+    public CustomItemReader readerBQ(){
+        String env = environment.getActiveProfiles()[0];
+        return new CustomItemReader(projectId, env);
+    }
+
+    @Bean
     public CoffeeItemProcessor processor() {
         return new CoffeeItemProcessor();
+    }
+
+    @Bean
+    public BQItemProcessor bqItemProcessor() {
+        return new BQItemProcessor();
     }
 
     @Bean
@@ -94,7 +101,7 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public Job importUserJob(JobCompletionNotificationListener listener, Step step1) {
+    public Job importUserJob(JobCompletionNotificationListener listener, Step step1) throws Exception {
         return jobBuilderFactory.get("importUserJob")
             .incrementer(new RunIdIncrementer())
             .listener(listener)
@@ -104,11 +111,32 @@ public class BatchConfiguration {
     }
 
     @Bean
+    public Job bigQueryReadJob(Step bigQueryReadStep) throws Exception {
+        return jobBuilderFactory.get("bigQueryReadJob")
+            .incrementer(new RunIdIncrementer())
+            .flow(bigQueryReadStep)
+            .end()
+            .build();
+    }
+
+    @Bean
+    @Qualifier("step1")
     public Step step1() throws Exception{
         return stepBuilderFactory.get("step1")
-            .<Coffee, Coffee> chunk(2000)
+            .<Coffee, Coffee> chunk(5)
             .reader(reader())
             .processor(processor())
+            .writer(writer())
+            .build();
+    }
+
+    @Bean
+    @Qualifier("bigQueryReadStep")
+    public Step bigQueryReadStep() throws Exception{
+        return stepBuilderFactory.get("bigQueryReadStep")
+            .<Corpus, Coffee> chunk(20)
+            .reader(readerBQ())
+            .processor(bqItemProcessor())
             .writer(writer())
             .build();
     }
