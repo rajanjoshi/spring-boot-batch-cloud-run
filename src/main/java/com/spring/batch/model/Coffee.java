@@ -1,4 +1,4 @@
-package com.spring.batch;
+package com.spring.batch.model;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
