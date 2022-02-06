@@ -1,6 +1,7 @@
 package com.spring.batch;
 import com.spring.batch.model.*;
 import com.spring.batch.reader.CustomItemReader;
+import com.spring.batch.utils.StorageUtils;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -20,9 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.PathResource;
-import com.google.auth.oauth2.ServiceAccountCredentials;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
+
 
 import com.google.cloud.storage.*;
 import com.google.api.gax.paging.Page;
@@ -36,6 +35,9 @@ import org.springframework.core.env.Environment;
 @EnableBatchProcessing
 public class BatchConfiguration {
 
+    @Value("${projectId}")
+    private String projectId;
+	
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
 
@@ -48,15 +50,15 @@ public class BatchConfiguration {
     @Autowired
     private Environment environment;
 
-    @Value("${projectId}")
-    private String projectId;
+    @Autowired
+    private StorageUtils storageUtils;
 
     @Bean
     public FlatFileItemReader<Coffee> reader() throws Exception{
         byte[] fileContents = null;
         String env = environment.getActiveProfiles()[0];
         try {	
-            Bucket bucket = getStorage(env).get(env+"-upstream-bucket");
+            Bucket bucket = storageUtils.getStorage(env).get(env+"-upstream-bucket");
             Page<Blob> blobs = bucket.list();
             for (Blob blob: blobs.getValues()) {
                 fileContents = blob.getContent();
@@ -140,12 +142,5 @@ public class BatchConfiguration {
             .writer(writer())
             .build();
     }
-
-    private Storage getStorage(String env) throws Exception{
-        return StorageOptions.newBuilder().
-                   setCredentials(ServiceAccountCredentials.fromStream(
-                    getClass().getResourceAsStream("/service-account-"+env+".json"))).build()
-                   .getService();
-       }
 
 }
