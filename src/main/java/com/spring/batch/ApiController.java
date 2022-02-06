@@ -23,10 +23,9 @@ import org.springframework.http.ResponseEntity;
 
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.Storage.BlobTargetOption;
 import com.google.cloud.storage.Storage.PredefinedAcl;
-import com.google.cloud.storage.StorageOptions;
+import com.spring.batch.utils.StorageUtils;
 import java.nio.file.Files;
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +45,7 @@ import java.util.stream.StreamSupport;
 import org.springframework.core.env.Environment;
 
 @RestController
-public class HelloController {
+public class ApiController {
 
     @Autowired
     private JobLauncher jobLauncher;
@@ -74,12 +73,12 @@ public class HelloController {
     @Value("classpath:templates/sample.xml")
     private Resource sampleXml;
 
-    @Value("${spring.datasource.password}")
-    private String databasePassword;
+    @Autowired
+    private StorageUtils storageUtils;
 
     @GetMapping("/")
     String hello() throws IOException{
-        return databasePassword;
+        return "Hello World!";
     }
 
     @GetMapping("/readFromBQJoin")
@@ -96,7 +95,7 @@ public class HelloController {
             // once, and can be reused for multiple requests.
             BigQuery bigquery =  BigQueryOptions.newBuilder()
                 .setCredentials(ServiceAccountCredentials.fromStream(
-                    getClass().getResourceAsStream("/service-account-"+env+".json")))
+                    getClass().getResourceAsStream("/"+env+"-service-account.json")))
                 .setProjectId(projectId)
                 .build()
                 .getService();
@@ -204,7 +203,7 @@ public class HelloController {
         String hourMinute = String.valueOf(System.currentTimeMillis());
         String env = environment.getActiveProfiles()[0];
         try {			
-			    BlobInfo blobInfo = getStorage(env).create(
+			    BlobInfo blobInfo = storageUtils.getStorage(env).create(
 				BlobInfo.newBuilder(env+"-upstream-bucket", hourMinute+"_"+file.getName()).build(), 
 				Files.readAllBytes(file.toPath()), 
 				BlobTargetOption.predefinedAcl(PredefinedAcl.PUBLIC_READ) 
@@ -214,12 +213,5 @@ public class HelloController {
 			throw new RuntimeException(e);
 		}
     }
-
-    private Storage getStorage(String env) throws Exception{
-        return StorageOptions.newBuilder().
-                   setCredentials(ServiceAccountCredentials.fromStream(
-                    getClass().getResourceAsStream("/service-account-"+env+".json"))).build()
-                   .getService();
-       }
 
 }
