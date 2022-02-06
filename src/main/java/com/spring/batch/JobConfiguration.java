@@ -1,5 +1,7 @@
 package com.spring.batch;
 import com.spring.batch.model.*;
+import com.spring.batch.processor.BQItemProcessor;
+import com.spring.batch.processor.CoffeeItemProcessor;
 import com.spring.batch.reader.CustomItemReader;
 import com.spring.batch.utils.StorageUtils;
 
@@ -33,11 +35,8 @@ import org.springframework.core.env.Environment;
 
 @Configuration
 @EnableBatchProcessing
-public class BatchConfiguration {
+public class JobConfiguration {
 
-    @Value("${projectId}")
-    private String projectId;
-	
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
 
@@ -49,6 +48,9 @@ public class BatchConfiguration {
 
     @Autowired
     private Environment environment;
+
+    @Value("${projectId}")
+    private String projectId;
 
     @Autowired
     private StorageUtils storageUtils;
