@@ -14,4 +14,5 @@ provider "google" {
 locals {
   service_folder = "service"
   service_name   = "terrraform-spring-batch"
+  cluster_name   = "dev-cluster"
 }
