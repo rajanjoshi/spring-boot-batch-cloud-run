@@ -1,4 +1,4 @@
-package com.spring.batch;
+package com.spring.batch.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
