@@ -1,7 +1,7 @@
 resource "google_container_node_pool" "dev-cluster_default-pool" {
-  cluster            = "${google_container_cluster.dev-cluster.name}"
+  cluster            = var.cluster_name
   initial_node_count = "1"
-  location           = "us-central1-c"
+  location           = var.region
 
   management {
     auto_repair  = "true"
