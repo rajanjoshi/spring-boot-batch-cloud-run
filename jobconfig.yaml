@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  # Unique key of the Job instance
+  name: springbatch
+spec:
+  completions: 1
+  ttlSecondsAfterFinished: 0
+  template:
+    metadata:
+      name: springbatch-job
+    spec:
+      containers:
+      - name: springbatch
+        image: gcr.io/southern-branch-338317/spring-batch-postgres-gcs-bq17
+        command: ["java", "-jar", "-Dspring.profiles.active=dev","/springbatch.jar"]
+        args: ["importUserJob"]
+      # Do not restart containers after they exit
+      restartPolicy: Never
+  # of retries before marking as failed.
+  backoffLimit: 2
