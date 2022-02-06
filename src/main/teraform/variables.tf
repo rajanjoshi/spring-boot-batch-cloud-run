@@ -8,3 +8,8 @@ variable "region" {
   default = "us-central1"
   type    = string
 }
+
+variable "cluster" {
+  default = "dev-cluster"
+  type    = string
+}
