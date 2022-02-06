@@ -3,6 +3,7 @@ import com.spring.batch.model.*;
 import com.spring.batch.processor.BQItemProcessor;
 import com.spring.batch.processor.CoffeeItemProcessor;
 import com.spring.batch.reader.CustomItemReader;
+import com.spring.batch.repository.CoffeeRepository;
 import com.spring.batch.utils.StorageUtils;
 
 import org.springframework.batch.core.Job;
