@@ -21,6 +21,7 @@ mvn compile com.google.cloud.tools:jib-maven-plugin:2.4.0:build -Dimage=gcr.io/P
 gcloud app deploy target/springbatch.jar
 ```
 
+
 ## Cloud Run
 Run with Jib
 ```
